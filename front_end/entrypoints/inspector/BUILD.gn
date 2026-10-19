@@ -7,6 +7,9 @@ import("../visibility.gni")
 devtools_entrypoint("entrypoint") {
   entrypoint = "inspector.ts"
 
+  # guojinghua@lexmount: add screencast toggle button Include inspector.html's static and dynamic imports in a single bundle.
+  bundle_all = true
+
   deps = [
     "../../panels/screencast:meta",
     "../devtools_app:entrypoint",

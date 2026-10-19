@@ -37,6 +37,11 @@ const plugin = {
   },
 };
 
+// guojinghua@lexmount: single bundle plugin is used to bundle compiled sources instead of already bundled modules. Otherwise a file imported both directly and through a module bundle would be initialized twice. esbuild also preserves lazy initialization for inlined dynamic imports.
+const {singleBundlePlugin, writeDepfile} = require('./single_bundle_plugin.js');
+const bundleAll = process.argv.slice(4).includes('--bundle-all');
+const minify = process.argv.slice(4).includes('--minify');
+
 esbuild
     .build({
       entryPoints,
@@ -44,8 +49,29 @@ esbuild
       bundle: true,
       format: 'esm',
       platform: 'browser',
-      plugins: [plugin],
+
+      // guojinghua@lexmount
+      plugins: [bundleAll ? singleBundlePlugin(outfile, useSourceMaps) : plugin],
+
       sourcemap: useSourceMaps,
+
+      // guojinghua@lexmount
+      minify,
+      metafile: bundleAll,
+      write: !bundleAll,
+
+    })
+
+    // guojinghua@lexmount
+    .then(result => {
+      if (bundleAll) {
+        // Keep unchanged output timestamps stable for Ninja's restat handling.
+        const {writeIfChanged} = require('./ninja/write-if-changed.js');
+        for (const output of result.outputFiles) {
+          writeIfChanged(output.path, output.text);
+        }
+        writeDepfile(outfile, result.metafile);
+      }
     })
     .catch(err => {
       console.error('Failed to run esbuild:', err);

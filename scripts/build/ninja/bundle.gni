@@ -11,10 +11,15 @@ template("bundle") {
          "You must define the 'entrypoint' for a bundle target")
 
   _fast_bundle = is_debug || devtools_skip_typecheck
+
+  # guojinghua@lexmount
+  _single_bundle = defined(invoker.bundle_all) && invoker.bundle_all
+
   assert(!is_official_build || !_fast_bundle,
          "Fast bundling is disallowed for official builds.")
 
-  if (_fast_bundle) {
+  # guojinghua@lexmount
+  if (_fast_bundle || _single_bundle) {
     node_action(target_name) {
       script = "scripts/build/esbuild.js"
       forward_variables_from(invoker,
@@ -42,6 +47,17 @@ template("bundle") {
         rebase_path(invoker.output_file_location, root_build_dir),
         "--configSourcemaps",
       ]
+
+      # guojinghua@lexmount
+      if (_single_bundle) {
+        inputs += [ devtools_location_prepend +
+                    "scripts/build/single_bundle_plugin.js" ]
+        args += [ "--bundle-all" ]
+        depfile = invoker.output_file_location + ".d"
+        if (!is_debug) {
+          args += [ "--minify" ]
+        }
+      }
 
       outputs = [ invoker.output_file_location ]
     }

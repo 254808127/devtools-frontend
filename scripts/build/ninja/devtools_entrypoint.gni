@@ -126,6 +126,9 @@ template("devtools_entrypoint") {
 
       output_file_location = _entrypoint_gen_file_location
 
+      # guojinghua@lexmount
+      forward_variables_from(invoker, [ "bundle_all" ])
+
       # Since bundles both the entrypoint and the files it imports,
       # we have to make sure that, when you change a file it imports, we
       # retrigger Rollup. Since the `invoker.deps` is a reference to the
