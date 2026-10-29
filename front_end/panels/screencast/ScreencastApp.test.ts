@@ -2,8 +2,10 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import * as Common from '../../core/common/common.js';
 import * as SDK from '../../core/sdk/sdk.js';
 import type * as Protocol from '../../generated/protocol.js';
+import {renderElementIntoDOM} from '../../testing/DOMHelpers.js';
 import {createTarget} from '../../testing/EnvironmentHelpers.js';
 import {expectCall} from '../../testing/ExpectStubCall.js';
 import {describeWithMockConnection, setMockConnectionResponseHandler} from '../../testing/MockConnection.js';
@@ -12,6 +14,16 @@ import * as UI from '../../ui/legacy/legacy.js';
 import * as Screencast from './screencast.js';
 
 describeWithMockConnection('ScreencastApp', () => {
+  beforeEach(() => {
+    const styles = document.createElement('style');
+    styles.textContent = UI.inspectorCommonStyles;
+    renderElementIntoDOM(styles);
+  });
+
+  afterEach(() => {
+    Common.Settings.Settings.instance().createSetting('screencast-enabled', true).set(true);
+  });
+
   it('keeps Runtime unsubscribed until the inspector is opened', () => {
     const enable = sinon.stub().returns({});
     const disable = sinon.stub().returns({});
